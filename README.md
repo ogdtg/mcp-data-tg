@@ -1,4 +1,4 @@
-# data-bs-mcp
+# data-tg-mcp
 
 MCP server for any Huwise/Opendatasoft data portal.
 
@@ -21,7 +21,7 @@ npx @modelcontextprotocol/inspector uv run main.py
 
 ### Install with uvx
 ```bash
-uvx --from git+https://github.com/DCC-BS/mcp-data-bs data-bs-mcp
+uvx --from git+https://github.com/ogdtg/mcp-data-tg data-tg-mcp
 ```
 
 ## Selecting a catalog
@@ -32,14 +32,43 @@ path, so you only set the domain:
 
 ```
 # .env
-DATA_PORTAL_DOMAIN=data.bl.ch
+DATA_PORTAL_DOMAIN=data.tg.ch
 ```
 
 The full API base URL is built as
 `https://<domain>/api/explore/v2.1`.
 
 The `.env` file is committed, so a fork carries its
-catalog choice through `uvx` installs as well.
+catalog choice through `uvx` installs as well. This fork is configured for
+`data.tg.ch`, the Kanton Thurgau open data portal.
+
+## Hosting on Posit Connect
+
+Besides the stdio entry point used above, `main.py` also exposes a
+Streamable HTTP ASGI app as `app`, so this repo can be published to Posit
+Connect via **Git-backed publishing** and reached as a remote MCP server.
+
+1. In Posit Connect, create new content and choose to publish from a Git
+   repository, pointing at this repo/branch.
+2. Connect auto-detects the included `manifest.json`
+   (`appmode: python-fastapi`, entrypoint `main:app`) and
+   `requirements.txt`, builds the environment, and starts the app itself —
+   no extra configuration is needed.
+3. Before publishing, edit `.env` so `DATA_PORTAL_DOMAIN` points at the
+   catalog you want this deployment to serve (already set to `data.tg.ch`
+   for this fork).
+4. Once deployed, the MCP endpoint is available at the content's URL with
+   the `/mcp` path appended, e.g. `https://<connect-server>/content/<guid>/mcp`.
+   Configure that URL as a remote/HTTP MCP server in your client.
+
+If you change dependencies, regenerate `requirements.txt` and
+`manifest.json` before pushing:
+
+```bash
+uv sync
+uv pip freeze | grep -v '^-e ' > requirements.txt
+uvx rsconnect write-manifest fastapi --entrypoint main:app --overwrite .
+```
 
 ## Configuration
 
@@ -50,11 +79,11 @@ Add to your OpenCode config:
 ```json
 {
   "mcpServers": {
-    "data-bs": {
+    "data-tg": {
       "command": "uv",
       "args": [
         "--directory",
-        "/ABSOLUTE/PATH/TO/data-bs-mcp",
+        "/ABSOLUTE/PATH/TO/data-tg-mcp",
         "run",
         "main.py"
       ]
@@ -70,11 +99,11 @@ Add to your Cursor config (`~/.cursor/mcp.json`):
 ```json
 {
   "mcpServers": {
-    "data-bs": {
+    "data-tg": {
       "command": "uv",
       "args": [
         "--directory",
-        "/ABSOLUTE/PATH/TO/data-bs-mcp",
+        "/ABSOLUTE/PATH/TO/data-tg-mcp",
         "run",
         "main.py"
       ]

@@ -1,16 +1,17 @@
 [project]
-name = "data-bs-mcp"
+name = "data-tg-mcp"
 version = "0.1.0"
-description = "MCP server for data.bs.ch open data portal"
+description = "MCP server for data.tg.ch open data portal"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "httpx>=0.28.1",
     "mcp[cli]>=1.26.0",
+    "uvicorn>=0.34.0",
 ]
 
 [project.scripts]
-data-bs-mcp = "main:main"
+data-tg-mcp = "main:main"
 
 [build-system]
 requires = ["hatchling"]

@@ -32,7 +32,10 @@ if not DOMAIN:
 DOMAIN = DOMAIN.removeprefix("https://").removeprefix("http://").strip("/")
 BASE_URL = f"https://{DOMAIN}/api/explore/v2.1"
 
-mcp = FastMCP(DOMAIN)
+# stateless_http: each request is handled independently, with no server-side
+# session/SSE state kept between calls. Required for hosting behind Posit
+# Connect, which may run multiple worker processes for the same content.
+mcp = FastMCP(DOMAIN, stateless_http=True)
 
 
 async def fetch(endpoint: str, params: dict[str, str | int] | None = None) -> dict:
@@ -284,6 +287,12 @@ async def export_dataset_url(
     if where:
         url += f"?where={where}"
     return url
+
+
+# ASGI app for HTTP hosting (e.g. Posit Connect, which imports this as
+# `main:app` and serves it itself). Not used for the local/uvx stdio entry
+# point below.
+app = mcp.streamable_http_app()
 
 
 def main():
