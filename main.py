@@ -2,6 +2,7 @@ from pathlib import Path
 
 import httpx
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
 
 def _read_env_file(path: Path) -> dict[str, str]:
@@ -35,7 +36,20 @@ BASE_URL = f"https://{DOMAIN}/api/explore/v2.1"
 # stateless_http: each request is handled independently, with no server-side
 # session/SSE state kept between calls. Required for hosting behind Posit
 # Connect, which may run multiple worker processes for the same content.
-mcp = FastMCP(DOMAIN, stateless_http=True)
+# json_response: plain JSON instead of SSE per response, so replies are not
+# buffered/broken by the Connect proxy.
+# DNS rebinding protection is disabled because it rejects any Host header
+# other than localhost (HTTP 421); behind Posit Connect the Host is the
+# Connect server's. The protection only matters for servers bound to
+# localhost, not for a TLS-hosted remote server.
+mcp = FastMCP(
+    DOMAIN,
+    stateless_http=True,
+    json_response=True,
+    transport_security=TransportSecuritySettings(
+        enable_dns_rebinding_protection=False
+    ),
+)
 
 
 async def fetch(endpoint: str, params: dict[str, str | int] | None = None) -> dict:
